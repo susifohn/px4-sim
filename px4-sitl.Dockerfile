@@ -11,7 +11,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # ============================================================================
 # Install PX4 Autopilot dependencies
 # ============================================================================
-RUN apt-get update && apt-get install -y \
+#RUN apt-get update && apt-get install -y \
+RUN apt-get -o Acquire::ForceIPv4=true update && apt-get install -y \
     build-essential \
     cmake \
     ninja-build \
@@ -64,7 +65,8 @@ RUN git clone https://github.com/PX4/PX4-Autopilot.git --recursive \
 # RUN DONT_RUN=1 make px4_sitl gz_x500
 
 # Install Mavros package
-RUN apt-get update && apt-get install -y \
+#RUN apt-get update && apt-get install -y \
+RUN apt-get -o Acquire::ForceIPv4=true update && apt-get install -y \
     ros-jazzy-mavros
 
 # Install dependencies for Mavros
@@ -76,7 +78,8 @@ RUN wget https://raw.githubusercontent.com/mavlink/mavros/ros2/mavros/scripts/in
 # ============================================================================
 # Install TigerVNC and NoVNC
 # ============================================================================
-RUN apt-get update && apt-get install -y \
+#RUN apt-get update && apt-get install -y \
+RUN apt-get -o Acquire::ForceIPv4=true update && apt-get install -y \
     xfce4 \
     xfce4-goodies \
     dbus-x11 \
