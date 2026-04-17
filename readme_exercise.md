@@ -418,3 +418,188 @@ entry_points={
 root@e44bed65c5ee:~/ros2_ws# ros2 run depth_perception pointcloud_filter
 [INFO] [1776382067.905639673] [pointcloud_filter]: PointCloud Filter Node started
 ```
+
+### Streaming camera points
+
+Having RGB points:
+
+```bash
+root@e44bed65c5ee:~/ros2_ws# ros2 topic echo /depth_camera/points --once
+header:
+  stamp:
+    sec: 245
+    nanosec: 60000000
+  frame_id: camera_link
+height: 480
+width: 640
+fields:
+- name: x
+  offset: 0
+  datatype: 7
+  count: 1
+- name: y
+  offset: 4
+  datatype: 7
+  count: 1
+- name: z
+  offset: 8
+  datatype: 7
+  count: 1
+- name: rgb
+  offset: 16
+  datatype: 7
+  count: 1
+is_bigendian: false
+point_step: 24
+row_step: 15360
+data:
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 0
+- 128
+- 127
+- 0
+- 0
+- 128
+- 127
+- '...'
+is_dense: true
+---
+root@e44bed65c5ee:~/ros2_ws#
+```
+
+### RViz
+
+Starting
+
+```bash
+root@e44bed65c5ee:~/ros2_ws# rviz2
+QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
+[INFO] [1776384232.908557873] [rviz2]: Stereo is NOT SUPPORTED
+[INFO] [1776384232.909177279] [rviz2]: OpenGl version: 4.5 (GLSL 4.5)
+[INFO] [1776384233.217657902] [rviz2]: Stereo is NOT SUPPORTED
+```
+
+![Rviz2](./assets/vnc_rviz.png)
+
+![Pointcloud](./assets/vnc_rviz_pointcloud.png)
+
