@@ -1,4 +1,11 @@
 # Depth Estimation and 3D Point Cloud Generation
+
+Christian.kissling@students.unibe.ch
+
+
+
+[Github Url:https://github.com/susifohn/px4-sim](https://github.com/susifohn/px4-sim)
+
 ## Objective: 
 Implement a ROS2 node that performs depth estimation from RGB-D or monocular camera inputs, generates 3D point clouds, and performs segmentation and analysis for downstream  perception tasks.
 
@@ -603,3 +610,121 @@ QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '/tmp/runtime-root'
 
 ![Pointcloud](./assets/vnc_rviz_pointcloud.png)
 
+### Filtering Fix
+Fixing in the container
+```bash
+root@e44bed65c5ee:~/ros2_ws# vim src/depth_perception/depth_perception/pointcloud_filter.py
+```
+
+like this, to fix *obstacle* not defined and do the filtering correct:
+
+```python
+import rclpy
+from rclpy.node import Node
+
+from sensor_msgs.msg import PointCloud2
+from sensor_msgs_py import point_cloud2
+
+import numpy as np
+import math
+
+
+class PointCloudFilter(Node):
+
+    def __init__(self):
+        super().__init__('pointcloud_filter')
+
+        self.sub = self.create_subscription(
+            PointCloud2,
+            '/depth_camera/points',
+            self.callback,
+            10
+        )
+
+        self.pub = self.create_publisher(
+            PointCloud2,
+            '/obstacle_points',
+            10
+        )
+
+        self.get_logger().info("PointCloud Filter Node started")
+        ###############################################################
+    def callback(self, msg):
+
+        points = list(point_cloud2.read_points(
+            msg,
+            field_names=("x", "y", "z"),
+            skip_nans=True
+        ))
+
+        if len(points) < 50:
+            return
+
+        filtered = []
+
+
+        for x, y, z in points:
+            if not (np.isfinite(x) and np.isfinite(y) and np.isfinite(z)):
+                continue
+
+            distance = math.sqrt(x*x + y*y + z*z)
+
+            if distance > 0.5 and distance < 10.0:
+                filtered.append((x, y, z))
+
+
+        if len(filtered) == 0:
+            self.get_logger().warn("No obstacle points")
+            return
+
+        out_msg = point_cloud2.create_cloud_xyz32(msg.header, filtered)
+
+        self.pub.publish(out_msg)
+
+        if len(filtered) > 0:
+             self.get_logger().info(f"Published {len(filtered)} points")
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = PointCloudFilter()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()
+```
+Rubuild
+```bash
+cd ~/ros2_ws
+colcon build --symlink-install
+source install/setup.bash
+```
+
+Run
+
+```bash
+root@e44bed65c5ee:~/ros2_ws# ros2 run depth_perception pointcloud_filter
+[INFO] [1776670904.209353055] [pointcloud_filter]: PointCloud Filter Node started
+[INFO] [1776670906.522228111] [pointcloud_filter]: Published 146134 points
+[INFO] [1776670908.938095688] [pointcloud_filter]: Published 146134 points
+...
+```
+Getting filtered points
+
+```bash
+root@e44bed65c5ee:~# ros2 topic list | grep obstacle
+/obstacle_points
+root@e44bed65c5ee:~# ros2 topic hz /obstacle_points
+average rate: 0.217
+        min: 2.336s max: 6.878s std dev: 2.27129s window: 2
+average rate: 0.220
+        min: 2.336s max: 6.878s std dev: 1.85656s window: 3
+average rate: 0.199
+        min: 2.336s max: 6.878s std dev: 1.80514s window: 4
+average rate: 0.192
+        min: 2.336s max: 6.878s std dev: 1.65719s window: 5
+^Croot@e44bed65c5ee:~#
+```
