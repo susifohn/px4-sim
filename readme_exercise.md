@@ -6,6 +6,8 @@ Christian.kissling@students.unibe.ch
 
 [Github Url:https://github.com/susifohn/px4-sim](https://github.com/susifohn/px4-sim)
 
+
+
 ## Objective: 
 Implement a ROS2 node that performs depth estimation from RGB-D or monocular camera inputs, generates 3D point clouds, and performs segmentation and analysis for downstream  perception tasks.
 
@@ -728,3 +730,145 @@ average rate: 0.192
         min: 2.336s max: 6.878s std dev: 1.65719s window: 5
 ^Croot@e44bed65c5ee:~#
 ```
+
+
+# Full Restart & Run Guide — PX4 + Gazebo + ROS2 Depth Perception
+
+
+This guide shows how to restart everything from a clean shutdown and get the full pipeline running again.
+
+---
+
+# 1. Start Docker environment
+
+From your project folder:
+
+```bash
+docker-compose up -d
+```
+
+---
+
+# 2. Enter PX4 container
+
+```bash
+docker exec -it px4_sitl bash
+```
+
+---
+
+# 3. Start PX4 SITL + Gazebo simulation
+
+```bash
+cd ~/PX4-Autopilot
+make px4_sitl gz_x500_depth
+```
+
+Wait until:
+- Gazebo opens
+- Drone appears in the world
+
+---
+
+# 4. (If needed) Start ROS-Gazebo bridge
+
+If topics are missing:
+
+```bash
+ros2 run ros_gz_bridge parameter_bridge
+```
+
+---
+
+# 5. Check camera / depth topics
+
+```bash
+ros2 topic list | grep depth
+```
+
+Expected:
+- `/depth_camera/points`
+- `/depth_camera`
+- camera image topics
+
+---
+
+# 6. Start your ROS2 perception node
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source ~/ros2_ws/install/setup.bash
+
+ros2 run depth_perception pointcloud_filter
+```
+
+Expected:
+```
+PointCloud Filter Node started
+Published XXXX points
+```
+
+---
+
+# 7. Verify obstacle output
+
+```bash
+ros2 topic list | grep obstacle
+```
+
+Expected:
+/obstacle_points
+
+Check rate:
+
+```bash
+ros2 topic hz /obstacle_points
+```
+
+---
+
+# 8. Open VNC desktop (Gazebo + RViz)
+
+http://localhost:6080/vnc_lite.html
+
+---
+
+# 9. Start RViz2
+
+```bash
+rviz2
+```
+
+---
+
+# 10. Configure RViz
+
+Fixed Frame:
+camera_link
+
+Add:
+- /depth_camera/points
+- /obstacle_points
+
+---
+
+# 11. Visualization setup
+
+- Style: Points  
+- Size: 2–4  
+- raw = gray  
+- obstacles = red  
+
+---
+
+# 12. Full pipeline
+
+Gazebo → Depth Camera → ROS-Gz Bridge → PointCloud → Filter Node → RViz
+
+---
+
+# 13. Shutdown
+
+Ctrl + C  
+exit  
+docker-compose down
